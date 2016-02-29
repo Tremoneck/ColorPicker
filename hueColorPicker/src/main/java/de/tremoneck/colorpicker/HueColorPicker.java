@@ -18,7 +18,7 @@ public class HueColorPicker extends View {
     private float cBrightness = 0.5F;
     private float cSaturation;
     /**
-     * in Fucking degrees
+     * The Hue value in degrees
      */
     private float cHue;
 
@@ -26,11 +26,23 @@ public class HueColorPicker extends View {
 
     private Paint paintCircle = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint paintBrightnessSlider = new Paint(Paint.ANTI_ALIAS_FLAG);
+    /**
+     * Paint for the various UI Indicators
+     */
     private Paint paintBlack = new Paint(Paint.ANTI_ALIAS_FLAG);
 
+    /**
+     * Buffer Bitmap so we can hardware accelerate the rest of the View
+     */
     private Bitmap innerCircle;
     private Context context;
 
+    /**
+     * Standard constructor Attrs is not in use
+     *
+     * @param context The Application Context the view is created in
+     * @param attrs   The AttributeSet provided
+     */
     public HueColorPicker(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.context = context;
@@ -42,10 +54,18 @@ public class HueColorPicker extends View {
         setColor(0xFFFFFF);
     }
 
+    /**
+     * Returns the currently selected color from within the color wheel, with alpha beeing 255
+     * @return The selected color
+     */
     public int getColor() {
         return Color.HSVToColor(255, new float[]{cHue, cSaturation, cBrightness});
     }
 
+    /**
+     * Set's the currently selected while ignoring alpha
+     * @param color the color to be selected
+     */
     public void setColor(int color) {
         color = color | 0xFF000000;
         float[] f = new float[3];
@@ -65,11 +85,14 @@ public class HueColorPicker extends View {
      */
     private final static int HSChooser = 0;
     /**
-     * Brightnes Chooser
+     * Brightnes Chooser ID
      */
     private final static int BChooser = 1;
     private final static int OffInterface = -1;
 
+    /**
+     * Contains the idea, in which the current touch is in or -1 if nothing is touched
+     */
     private int interfaceID;
 
     @Override
@@ -110,8 +133,17 @@ public class HueColorPicker extends View {
         return super.onTouchEvent(event);
     }
 
+    /**
+     * Helper function for onTouchEvent which handles all the interaction with the HSChooser
+     * @param unit Current scale of the interface, generally <b>getWidth/16</b>
+     * @param hypo The distance of the event
+     * @param x The horizontal distance between the circle center and the selection
+     * @param y The vertical distance between the circle center and the selection
+     * @return Always return's true
+     */
     private boolean HSInteraction(float unit, float hypo, float x, float y){
         float unit5 = unit * 5;
+        //Make sure that even when pulled outside the selector circle stays within the selectable area
         if(hypo <= unit * 5) {
             pointer_X = x / unit5;
             pointer_Y = y / unit5;
@@ -122,6 +154,7 @@ public class HueColorPicker extends View {
         }
         cSaturation = Math.min(hypo / unit5, 1);
         cHue = (float) Math.toDegrees(Math.atan(y / x));
+        //Adjust for the fact that atan only gives values between -pi/2 and pi/2
         if (x < 0) {
             cHue += 180;
         } else if (y < 0) {
@@ -137,14 +170,16 @@ public class HueColorPicker extends View {
         super.onDraw(canvas);
         float unit = getWidth() / 16;
         float unit8 = unit * 8;
-        paintCircle.setColor(Color.HSVToColor(new float[]{cHue, cSaturation, cBrightness})); //TODO Move elsewhere
+        paintCircle.setColor(Color.HSVToColor(new float[]{cHue, cSaturation, cBrightness}));
         canvas.drawArc(unit, unit, unit * 15, unit * 15, 269.98F, 180.02F, false, paintCircle);
         canvas.drawArc(unit, unit, unit * 15, unit * 15, 89.98F, 180.02F, false, paintBrightnessSlider);
         canvas.drawBitmap(innerCircle, unit * 3, unit * 3, paintBlack);
         canvas.drawCircle(pointer_X * unit * 5 + unit8, pointer_Y * unit * 5 + unit8, unit * 0.2F, paintBlack);
         float sin = (float) (-Math.sin(cBrightness * Math.PI)) * unit;
         float cos = (float) (Math.cos(cBrightness * Math.PI)) * unit;
+        //Brightness Indicator Line
         canvas.drawLine(sin * 6.25F + unit8, cos * 6.25F + unit8, sin * 7.75F + unit8, cos * 7.75F + unit8, paintBlack);
+        //Debuging information, should be stripped in release builds
         if (android.os.Debug.isDebuggerConnected() && BuildConfig.DEBUG) {
             canvas.drawText("B " + cBrightness, 0, 20, paintBlack);
             canvas.drawText("H " + cHue, 0, 40, paintBlack);
@@ -207,6 +242,9 @@ public class HueColorPicker extends View {
         updateBrightnessShader();
     }
 
+    /**
+     * Creates the Buffer bitmap of the HSChooser
+     */
     private void createCenter() {
         int height = getHeight() / 16;
         int width = getWidth() / 16;
@@ -214,9 +252,11 @@ public class HueColorPicker extends View {
 
         innerCircle = Bitmap.createBitmap(context.getResources().getDisplayMetrics(), size * 10, size * 10, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(innerCircle);
+        //Initialize the Paint
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setStrokeWidth(size);
         paint.setStyle(Paint.Style.FILL);
+        //Create Shader
         RadialGradient radial_gradient = new RadialGradient(size * 5, size * 5, size * 5, 0xFFFFFFFF,
                 0x00FFFFFF, android.graphics.Shader.TileMode.CLAMP);
 
@@ -237,6 +277,9 @@ public class HueColorPicker extends View {
         canvas.drawCircle(size * 5, size * 5, size * 5, paint);
     }
 
+    /**
+     * Updates the Shader on the <b>paintBrightnessSlider</b> paint, so that it matches the selected color
+     */
     private void updateBrightnessShader() {
         float size = getWidth() / 2;
         paintBrightnessSlider.setShader(new SweepGradient(size, size, new int[]{Color.HSVToColor(new float[]{cHue, cSaturation, 0}), Color.HSVToColor(new float[]{cHue, cSaturation, 1F})},

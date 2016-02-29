@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ColorPicker.iml" filepath="$PROJECT_DIR$/ColorPicker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ColorPicker.iml" filepath="$PROJECT_DIR$/ColorPicker.iml" />
       <module fileurl="file://$PROJECT_DIR$/colorpickertester/colorpickertester.iml" filepath="$PROJECT_DIR$/colorpickertester/colorpickertester.iml" />
       <module fileurl="file://$PROJECT_DIR$/hueColorPicker/hueColorPicker.iml" filepath="$PROJECT_DIR$/hueColorPicker/hueColorPicker.iml" />
     </modules>

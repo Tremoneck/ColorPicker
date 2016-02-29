@@ -8,24 +8,39 @@ public class HuePickerAlert extends AlertDialog implements AlertDialog.OnClickLi
 
     private HueColorPicker picker;
     private ColorPickerListener listener;
-    private int color;
 
+    /**
+     * @param context The context upon which to initialise
+     * @param color   The standard color selected
+     */
+    @SuppressWarnings("unused")
     public HuePickerAlert(Context context, int color) {
         super(context);
         picker = new HueColorPicker(context, null);
         picker.setColor(color);
         setView(picker);
-        this.color = color;
         setCancelable(true);
         setButton(BUTTON_POSITIVE, context.getString(R.string.alert_choose), this);
         setButton(BUTTON_NEGATIVE, context.getString(R.string.alert_cancel), this);
         setOnCancelListener(this);
     }
 
+    /**
+     * Get the currently selected color
+     *
+     * @return the selected color
+     */
+    @SuppressWarnings("unused")
     public int getColor() {
         return picker.getColor();
     }
 
+    /**
+     * Set the listener waiting for button interaction
+     *
+     * @param listener The listener to be called
+     */
+    @SuppressWarnings("unused")
     public void setListener(ColorPickerListener listener) {
         this.listener = listener;
     }
